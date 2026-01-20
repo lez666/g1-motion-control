@@ -75,3 +75,10 @@ python3 "../my work space/run_multi_policy_sim2sim.py" <path_to_latest_onnx>
 - `my work space/`: 推理脚本、分析工具及训练日志
 - `scripts/`: 项目引导与工具脚本
 - `third_party/holosoma/`: 核心仿真与训练框架 (Submodule)
+
+---
+
+## 📦 Pre-trained Models
+- **`model_22200.onnx`**: Latest refined locomotion (Stable gait & Upright posture).
+- **`model_39999.onnx`**: WBT policy for crawling and motion tracking.
+- **Legacy**: `model_04600.onnx` and `model_03300.onnx` are kept for reference.
