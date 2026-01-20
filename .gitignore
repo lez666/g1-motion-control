@@ -1,11 +1,11 @@
 # G1 Motion Control specific
 /my work space/logs/
+**/logs/
 *.pt
 *.onnx
 *.0
 *.tfevents.*
 /prompt/urdf/
-/third_party/holosoma/logs/
 
 # Future third_party ignores
 /third_party/*/logs/
