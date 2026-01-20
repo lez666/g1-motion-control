@@ -2,21 +2,21 @@
 
 Humanoid motion control and reinforcement learning for Unitree G1.
 
-## 🚀 快速开始
+## 🚀 快速开始 (Quick Start)
 
-### 1. 环境配置
+### 1. 环境配置 (Setup)
 ```bash
 git clone --recursive <repo-url>
 cd g1-motion-control
 ./scripts/bootstrap.sh
 ```
 
-### 2. 训练命令 (IsaacSim)
+### 2. 训练命令 (Training - IsaacSim)
 ```bash
 cd third_party/holosoma
 source scripts/source_isaacsim_setup.sh
 
-# 推荐：使用 8192 环境进行训练
+# 推荐：使用 8192 环境进行训练 (Recommended: 8192 envs)
 python src/holosoma/holosoma/train_agent.py \
     exp:g1-29dof-robust \
     reward:g1-29dof-loco-robust-refined \
@@ -25,56 +25,49 @@ python src/holosoma/holosoma/train_agent.py \
 
 ---
 
-## 🎮 仿真与部署 (MuJoCo)
+## 🎮 仿真备忘录 (Simulation Cheat Sheet - MuJoCo)
 
-### 步骤 A：启动仿真环境
-**平地地形 (默认):**
+### 终端 A：启动仿真环境 (Start Simulator)
+**默认平地 (Default Plane):**
 ```bash
-cd third_party/holosoma
-source scripts/source_mujoco_setup.sh
+cd third_party/holosoma && source scripts/source_mujoco_setup.sh
 python src/holosoma/holosoma/run_sim.py robot:g1-29dof terrain:terrain_locomotion_plane
 ```
 
-**斜坡地形:**
+**加载斜坡 (Load Slope):**
 ```bash
-cd third_party/holosoma
-source scripts/source_mujoco_setup.sh
+cd third_party/holosoma && source scripts/source_mujoco_setup.sh
 python src/holosoma/holosoma/run_sim.py robot:g1-29dof terrain:terrain_load_obj \
     --terrain.terrain-term.obj-file-path="src/holosoma/holosoma/data/motions/g1_29dof/whole_body_tracking/terrain_slope.obj"
 ```
 
-### 步骤 B：运行策略控制
-**Locomotion 策略 (支持方向键控制):**
+### 终端 B：运行策略控制 (Run Policy)
+**1. Locomotion 策略 (支持方向键实时控制):**
 ```bash
-cd third_party/holosoma
-source scripts/source_inference_setup.sh
-# 使用最新训练的 ONNX 模型
-python3 "../my work space/run_multi_policy_sim2sim.py" <path_to_latest_onnx>
+cd third_party/holosoma && source scripts/source_inference_setup.sh
+python3 "../my work space/run_multi_policy_sim2sim.py" <ONNX_PATH>
 ```
 
-**WBT 策略 (特殊动作):**
-- **跳舞:** 使用 `fastsac_g1_29dof_dancing.onnx`
-- **爬行:** 使用 WBT 实验目录下的 `model_39999.onnx`
+**2. WBT 策略 (跳舞/爬行):**
+```bash
+cd third_party/holosoma && source scripts/source_inference_setup.sh
+python3 src/holosoma_inference/holosoma_inference/run_policy.py inference:g1-29dof-wbt \
+    --task.model-path <WBT_ONNX_PATH> \
+    --task.no-use-joystick \
+    --task.interface lo
+```
 
 ---
 
-## ⌨️ 键盘控制指南
+## ⌨️ 操作要点 (Operations)
 
-1. **初始化**: 在 MuJoCo 窗口按 `8` 降低吊架，按 `9` 移除吊架。
-2. **启动**: 在控制终端按 `]` 启动策略。
-3. **模式切换**: 
-   - 按 `1`: 站立模式 (Stand)
-   - 按 `2`: 走路模式 (Walk)
-4. **运动控制** (仅限走路模式):
-   - `↑ ↓ ← →`: 前进、后退、左移、右移
+1. **MuJoCo 窗口**: 按 `8` 降低吊架，按 `9` 移除吊架。
+2. **控制终端**: 按 `]` 激活策略。
+3. **Locomotion 切换**: 数字键 `1` (站立模式), `2` (走路模式)。
+4. **实时运动控制** (仅限走路模式):
+   - `↑ ↓ ← →`: 前进、后退、左平移、右平移
    - `Q / E`: 左转、右转
    - `Z`: 速度清零
-
-## 📁 项目结构
-- `configs/`: G1 机器人及奖励函数配置
-- `my work space/`: 推理脚本、分析工具及训练日志
-- `scripts/`: 项目引导与工具脚本
-- `third_party/holosoma/`: 核心仿真与训练框架 (Submodule)
 
 ---
 
@@ -82,3 +75,9 @@ python3 "../my work space/run_multi_policy_sim2sim.py" <path_to_latest_onnx>
 - **`model_22200.onnx`**: Latest refined locomotion (Stable gait & Upright posture).
 - **`model_39999.onnx`**: WBT policy for crawling and motion tracking.
 - **Legacy**: `model_04600.onnx` and `model_03300.onnx` are kept for reference.
+
+## 📁 结构 (Structure)
+- `configs/`: G1 configurations
+- `my work space/`: Inference scripts & personal notes
+- `scripts/`: Utility scripts
+- `third_party/holosoma/`: Core framework
