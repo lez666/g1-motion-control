@@ -1,0 +1,39 @@
+# G1 运动控制备忘录 (Locomotion & WBT)
+
+## 1. 仿真环境启动 (终端 A)
+
+### 默认平地
+```bash
+cd third_party/holosoma && source scripts/source_mujoco_setup.sh
+python src/holosoma/holosoma/run_sim.py robot:g1-29dof terrain:terrain_locomotion_plane
+```
+
+### 加载斜坡
+```bash
+cd third_party/holosoma && source scripts/source_mujoco_setup.sh
+python src/holosoma/holosoma/run_sim.py robot:g1-29dof terrain:terrain_load_obj \
+    --terrain.terrain-term.obj-file-path="src/holosoma/holosoma/data/motions/g1_29dof/whole_body_tracking/terrain_slope.obj"
+```
+
+## 2. 策略控制运行 (终端 B)
+
+### 运行自研 Locomotion 策略 (支持方向键)
+```bash
+cd third_party/holosoma && source scripts/source_inference_setup.sh
+python3 "../my work space/run_multi_policy_sim2sim.py" <ONNX模型路径>
+```
+
+### 运行 WBT 策略 (跳舞/爬行)
+```bash
+cd third_party/holosoma && source scripts/source_inference_setup.sh
+python3 src/holosoma_inference/holosoma_inference/run_policy.py inference:g1-29dof-wbt \
+    --task.model-path <WBT_ONNX模型路径> \
+    --task.no-use-joystick \
+    --task.interface lo
+```
+
+## 3. 操作要点
+- **MuJoCo 窗口**: 按 `8` 降吊架, 按 `9` 卸吊架。
+- **控制终端**: 按 `]` 激活策略。
+- **Locomotion 切换**: 数字键 `1` (站立), `2` (走路)。
+- **实时控制**: 方向键控制平移，`Q/E` 控制旋转。

@@ -1,3 +1,12 @@
+# G1 Motion Control specific
+/my work space/logs/
+*.pt
+*.onnx
+*.0
+*.tfevents.*
+/prompt/urdf/
+/third_party/holosoma/logs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

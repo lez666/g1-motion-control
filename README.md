@@ -1,52 +1,77 @@
-# g1-motion-control
+# G1 Motion Control 🤖
 
-## Overview
+Humanoid motion control and reinforcement learning for Unitree G1.
 
-This repository provides an engineering implementation for motion control and imitation learning on the Unitree G1 humanoid robot. The project builds upon the holosoma framework (included as a submodule) and extends it with G1-specific configurations, training pipelines, and deployment workflows. The core objectives are to enable keyboard/gamepad-controlled crawling behaviors with adjustable forward speed and turning rate, as well as full-body motion tracking that can reproduce human motions and dance sequences through action retargeting.
+## 🚀 快速开始
 
-## Core Features
-
-- Command-conditioned crawling locomotion with adjustable forward velocity and turning rate
-- Full-body motion tracking and retargeting for human motions and dance
-- Integration with holosoma framework for training and simulation
-- G1-specific robot models and configurations
-- Keyboard and gamepad input interfaces for real-time control
-- Motion retargeting pipeline for converting human motion capture data to G1 joint trajectories
-
-## Repository Structure
-
-```
-g1-motion-control/
-├── configs/              # G1-specific training and deployment configurations
-├── docs/                 # Architecture documentation and roadmap
-├── scripts/              # Utility scripts for setup and deployment
-│   └── bootstrap.sh     # Initial submodule sync and setup
-├── third_party/         # External dependencies
-│   └── holosoma/        # Holosoma framework (submodule)
-└── README.md            # This file
-```
-
-The `third_party/holosoma` directory contains the holosoma framework with its full codebase, including simulation environments, training pipelines, and retargeting tools. This repository serves as a thin wrapper that provides G1-specific extensions and configurations rather than a fork of holosoma.
-
-## Getting Started
-
-Clone the repository and initialize submodules:
-
+### 1. 环境配置
 ```bash
-git clone <repository-url>
+git clone --recursive <repo-url>
 cd g1-motion-control
-git submodule update --init --recursive
-```
-
-Alternatively, use the provided bootstrap script:
-
-```bash
 ./scripts/bootstrap.sh
 ```
 
-Next steps depend on your use case:
+### 2. 训练命令 (IsaacSim)
+```bash
+cd third_party/holosoma
+source scripts/source_isaacsim_setup.sh
 
-- **Simulation setup**: See `third_party/holosoma/scripts/` for simulator-specific installation instructions (Isaac Sim, Isaac Gym, MuJoCo)
-- **Training**: Configuration files and training scripts will be located in `configs/` (see holosoma documentation for training workflow)
-- **Deployment**: See `third_party/holosoma/src/holosoma_inference/` for on-robot inference and control interfaces
-- **Motion retargeting**: See `third_party/holosoma/src/holosoma_retargeting/` for motion capture data processing and retargeting tools
+# 推荐：使用 8192 环境进行训练
+python src/holosoma/holosoma/train_agent.py \
+    exp:g1-29dof-robust \
+    reward:g1-29dof-loco-robust-refined \
+    --training.num-envs 8192
+```
+
+---
+
+## 🎮 仿真与部署 (MuJoCo)
+
+### 步骤 A：启动仿真环境
+**平地地形 (默认):**
+```bash
+cd third_party/holosoma
+source scripts/source_mujoco_setup.sh
+python src/holosoma/holosoma/run_sim.py robot:g1-29dof terrain:terrain_locomotion_plane
+```
+
+**斜坡地形:**
+```bash
+cd third_party/holosoma
+source scripts/source_mujoco_setup.sh
+python src/holosoma/holosoma/run_sim.py robot:g1-29dof terrain:terrain_load_obj \
+    --terrain.terrain-term.obj-file-path="src/holosoma/holosoma/data/motions/g1_29dof/whole_body_tracking/terrain_slope.obj"
+```
+
+### 步骤 B：运行策略控制
+**Locomotion 策略 (支持方向键控制):**
+```bash
+cd third_party/holosoma
+source scripts/source_inference_setup.sh
+# 使用最新训练的 ONNX 模型
+python3 "../my work space/run_multi_policy_sim2sim.py" <path_to_latest_onnx>
+```
+
+**WBT 策略 (特殊动作):**
+- **跳舞:** 使用 `fastsac_g1_29dof_dancing.onnx`
+- **爬行:** 使用 WBT 实验目录下的 `model_39999.onnx`
+
+---
+
+## ⌨️ 键盘控制指南
+
+1. **初始化**: 在 MuJoCo 窗口按 `8` 降低吊架，按 `9` 移除吊架。
+2. **启动**: 在控制终端按 `]` 启动策略。
+3. **模式切换**: 
+   - 按 `1`: 站立模式 (Stand)
+   - 按 `2`: 走路模式 (Walk)
+4. **运动控制** (仅限走路模式):
+   - `↑ ↓ ← →`: 前进、后退、左移、右移
+   - `Q / E`: 左转、右转
+   - `Z`: 速度清零
+
+## 📁 项目结构
+- `configs/`: G1 机器人及奖励函数配置
+- `my work space/`: 推理脚本、分析工具及训练日志
+- `scripts/`: 项目引导与工具脚本
+- `third_party/holosoma/`: 核心仿真与训练框架 (Submodule)
