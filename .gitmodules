@@ -1,3 +1,0 @@
-[submodule "third_party/holosoma"]
-	path = third_party/holosoma
-	url = git@github.com:amazon-far/holosoma.git

@@ -17,13 +17,13 @@ This project requires a high-performance Ubuntu workstation. **You MUST ensure t
 
 ### 1. Clone and Basic Dependencies
 ```bash
-git clone --recursive <repo-url>
+git clone <repo-url>
 cd g1-motion-control
-./scripts/bootstrap.sh  # Sync submodules and install control dependencies
+./scripts/bootstrap.sh  # Install control dependencies
 ```
 
 ### 2. Full Holosoma Setup
-Navigate to the submodule directory and complete the environment initialization according to the official workflow:
+Holosoma is now integrated into this repository as a local library. Navigate to the directory and complete the environment initialization:
 ```bash
 cd third_party/holosoma/scripts
 
@@ -85,6 +85,38 @@ python3 "../my work space/run_multi_policy_sim2sim.py" <path_to_onnx>
 
 ## 📁 Structure
 - `configs/`: G1 configurations
-- `my work space/`: Inference scripts & training logs
+- `my work space/`: Inference scripts & training logs (Contains selected ONNX models)
 - `scripts/`: Utility scripts
-- `third_party/holosoma/`: Core framework
+- `third_party/`:
+  - `holosoma/`: Core framework (Locally customized, not synced to upstream)
+  - `beyond_mimic/`: [Future] Motion imitation framework
+  - `gr00t/`: [Future] NVIDIA GR00T foundation model integration
+  - `twist2/`: [Future] Locomotion control
+  - `gmr/`: [Future] Gaussian Mixture Regression/Robotics
+  - `common_assets/`: Shared robot URDFs and meshes
+
+---
+
+## 🛠️ Third-Party Integration Plan (Roadmap)
+
+To maintain a clean and manageable workspace while integrating multiple complex repositories, we follow these principles:
+
+### 1. Vendor Strategy (No Upstream Sync)
+All `third_party` projects are "vendored" into this repository. This means:
+- We do **not** use Git Submodules for active development.
+- Local modifications are encouraged and committed directly to the main repository.
+- Version history of the original repo is removed to keep the workspace lightweight.
+
+### 2. Environment Isolation
+Each major framework (`gr00t`, `holosoma`, `beyond_mimic`) may require conflicting dependency versions (Isaac Sim 2023 vs 4.0, different PyTorch versions, etc.).
+- **Rule**: Use separate Conda environments or Docker containers for each major integration.
+- Environment-specific setup scripts should be placed in `scripts/envs/`.
+
+### 3. Shared Robot Assets
+Avoid duplicating large STL/Meshes across different `third_party` folders.
+- Store the "Source of Truth" for G1 URDF/Meshes in `third_party/common_assets/`.
+- Use soft links (`ln -s`) or config path overrides to point external frameworks to these shared assets.
+
+### 4. Weights & Model Management
+- **Git LFS**: Large `.pt` and `.onnx` files should be tracked via Git LFS or kept outside the main git history if they are intermediate training results.
+- **Redundancy Cleanup**: Intermediate models are periodically pruned (keeping only start and final milestones) to save space.

@@ -7,6 +7,13 @@
 /prompt/urdf/
 /third_party/holosoma/logs/
 
+# Future third_party ignores
+/third_party/*/logs/
+/third_party/*/build/
+/third_party/*/dist/
+/third_party/*/*.egg-info/
+/third_party/gr00t/isaac_sim_cache/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
