@@ -1,0 +1,21 @@
+# 终端 1: MuJoCo 仿真（斜坡地形）
+cd ~/g1-motion-control/third_party/holosoma
+source scripts/source_mujoco_setup.sh
+python src/holosoma/holosoma/run_sim.py robot:g1-29dof \
+    terrain:terrain_load_obj \
+    --terrain.terrain-term.obj-file-path="/home/wasabi/g1-motion-control/third_party/holosoma/src/holosoma/holosoma/data/motions/g1_29dof/whole_body_tracking/terrain_slope.obj"
+
+# 终端 1: MuJoCo 仿真（平地地形）
+cd ~/g1-motion-control/third_party/holosoma
+source scripts/source_mujoco_setup.sh
+python src/holosoma/holosoma/run_sim.py robot:g1-29dof terrain:terrain_locomotion_plane
+
+# 终端 2: 策略推理
+cd ~/g1-motion-control/third_party/holosoma
+source scripts/source_inference_setup.sh
+python3 src/holosoma_inference/holosoma_inference/run_policy.py inference:g1-29dof-wbt \
+    --task.model-path logs/WholeBodyTracking/20260109_123700-g1_29dof_wbt_manager-locomotion/model_39999.onnx \
+    --task.no-use-joystick \
+    --task.use-sim-time \
+    --task.rl-rate 50 \
+    --task.interface lo
