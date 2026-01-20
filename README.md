@@ -8,7 +8,7 @@ Humanoid motion control and reinforcement learning for Unitree G1.
 ```bash
 git clone --recursive <repo-url>
 cd g1-motion-control
-./scripts/bootstrap.sh
+./scripts/bootstrap.sh  # 安装依赖并同步子模块 (Install deps & sync submodules)
 ```
 
 ### 2. 训练命令 (Training - IsaacSim)
