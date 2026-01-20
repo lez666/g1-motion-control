@@ -97,6 +97,31 @@ python3 "../my work space/run_multi_policy_sim2sim.py" <path_to_onnx>
 
 ---
 
+## 💡 DIY Training & Customization
+
+Since `holosoma` is now a local library, you should place your custom logic within its package structure to ensure the dynamic loading system works correctly.
+
+### 1. Where to put your code?
+
+| Component | Target Path |
+| :--- | :--- |
+| **Reward Functions (Logic)** | `third_party/holosoma/src/holosoma/holosoma/managers/reward/terms/` |
+| **Reward Configs (Weights)** | `third_party/holosoma/src/holosoma/holosoma/config_values/loco/g1/reward.py` |
+| **Experiment Presets** | `third_party/holosoma/src/holosoma/holosoma/config_values/loco/g1/experiment.py` |
+| **Environment/Obs/Action DIY** | `third_party/holosoma/src/holosoma/holosoma/config_values/loco/g1/` |
+
+### 2. How to run your DIY experiment?
+
+1. Define your reward functions in `managers/reward/terms/`.
+2. Reference them in `config_values/loco/g1/reward.py` by creating a new `RewardManagerCfg`.
+3. Create a new `ExperimentConfig` in `experiment.py` (e.g., `g1_29dof_diy`).
+4. Start training:
+   ```bash
+   python src/holosoma/holosoma/train_agent.py exp:g1-29dof-diy
+   ```
+
+---
+
 ## 🛠️ Third-Party Integration Plan (Roadmap)
 
 To maintain a clean and manageable workspace while integrating multiple complex repositories, we follow these principles:
