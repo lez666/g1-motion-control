@@ -1,3 +1,0 @@
-Wed Jan 14 16:27:19 2026
-ERROR: Offscreen framebuffer is not complete, error 0x8cdd
-
