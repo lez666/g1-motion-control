@@ -4,10 +4,12 @@ Humanoid motion control and reinforcement learning for Unitree G1.
 
 ## ⚠️ Prerequisites (重要前置要求)
 
-This project requires a high-performance Ubuntu workstation with:
+This project requires a high-performance Ubuntu workstation. **You MUST ensure the base `holosoma` framework is fully configured before proceeding.**
+
 - **NVIDIA GPU** (RTX 3090/4090 recommended)
 - **NVIDIA Drivers** & **CUDA Toolkit** (12.x recommended)
 - **Python 3.10+** (Conda environment highly recommended)
+- **Holosoma Environment**: Verify that you can run basic Holosoma examples first.
 
 ---
 
@@ -17,28 +19,34 @@ This project requires a high-performance Ubuntu workstation with:
 ```bash
 git clone --recursive <repo-url>
 cd g1-motion-control
-./scripts/bootstrap.sh  # 同步子模块并安装控制依赖
+./scripts/bootstrap.sh  # 同步子模块并安装本项目特定的控制依赖
 ```
 
-### 2. 仿真框架安装 (Core Setup)
-这是最关键的一步，你需要根据需求安装仿真引擎：
+### 2. 仿真框架完全配置 (Full Holosoma Setup)
+进入子模块目录，按照官方流程完成完整的环境初始化：
 ```bash
 cd third_party/holosoma/scripts
 
-# 选项 A: 安装 IsaacSim (推荐用于训练)
+# 选项 A: 完整安装 IsaacSim (必须完成，用于训练)
 ./setup_isaacsim.sh
 
-# 选项 B: 安装 MuJoCo (推荐用于快速仿真测试)
+# 选项 B: 完整安装 MuJoCo (用于快速仿真推理)
 ./setup_mujoco.sh
+
+# 选项 C: 安装推理环境 (用于 run_multi_policy_sim2sim.py)
+./setup_inference.sh
 ```
-*注意：安装过程中会下载大量数据，请确保网络通畅。*
+*提示：如果遇到权限或路径问题，请参考 `third_party/holosoma/README.md`。*
 
 ### 3. 训练命令 (Training)
 ```bash
 # 激活 IsaacSim 环境并开始训练
 cd third_party/holosoma
 source scripts/source_isaacsim_setup.sh
-python src/holosoma/holosoma/train_agent.py exp:g1-29dof-robust --training.num-envs 8192
+python src/holosoma/holosoma/train_agent.py \
+    exp:g1-29dof-robust \
+    reward:g1-29dof-loco-robust-refined \
+    --training.num-envs 8192
 ```
 
 ---
