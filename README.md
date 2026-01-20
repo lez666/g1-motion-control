@@ -21,6 +21,11 @@ python src/holosoma/holosoma/train_agent.py \
     exp:g1-29dof-robust \
     reward:g1-29dof-loco-robust-refined \
     --training.num-envs 8192
+
+# 从检查点继续训练 (Resume training)
+python src/holosoma/holosoma/train_agent.py \
+    exp:g1-29dof-robust \
+    --training.checkpoint <path_to_model_xxxx.pt>
 ```
 
 ---
@@ -45,7 +50,8 @@ python src/holosoma/holosoma/run_sim.py robot:g1-29dof terrain:terrain_load_obj 
 **1. Locomotion 策略 (支持方向键实时控制):**
 ```bash
 cd third_party/holosoma && source scripts/source_inference_setup.sh
-python3 "../my work space/run_multi_policy_sim2sim.py" <ONNX_PATH>
+# 运行您训练的模型 (Run your trained model)
+python3 "../my work space/run_multi_policy_sim2sim.py" <path_to_onnx>
 ```
 
 **2. WBT 策略 (跳舞/爬行):**
@@ -62,12 +68,12 @@ python3 src/holosoma_inference/holosoma_inference/run_policy.py inference:g1-29d
 ## ⌨️ 操作要点 (Operations)
 
 1. **MuJoCo 窗口**: 按 `8` 降低吊架，按 `9` 移除吊架。
-2. **控制终端**: 按 `]` 激活策略。
-3. **Locomotion 切换**: 数字键 `1` (站立模式), `2` (走路模式)。
+2. **控制终端**: 按 `]` 激活策略 (Activate Policy)。
+3. **模式切换**: 数字键 `1` (站立模式 Stand), `2` (走路模式 Walk)。
 4. **实时运动控制** (仅限走路模式):
    - `↑ ↓ ← →`: 前进、后退、左平移、右平移
    - `Q / E`: 左转、右转
-   - `Z`: 速度清零
+   - `Z`: 速度清零 (Zero velocity)
 
 ---
 
@@ -78,6 +84,6 @@ python3 src/holosoma_inference/holosoma_inference/run_policy.py inference:g1-29d
 
 ## 📁 结构 (Structure)
 - `configs/`: G1 configurations
-- `my work space/`: Inference scripts & personal notes
+- `my work space/`: Inference scripts & training logs
 - `scripts/`: Utility scripts
 - `third_party/holosoma/`: Core framework
