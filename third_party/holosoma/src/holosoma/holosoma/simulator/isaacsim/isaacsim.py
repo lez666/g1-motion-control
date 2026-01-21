@@ -314,7 +314,8 @@ class IsaacSim(BaseSimulator):
         terrain_prim_path = "/World/ground"
         height_scanner_config = None
         terrain_state = self.terrain_manager.get_state("locomotion_terrain")
-        if terrain_state.mesh_type not in ["fake", None]:
+        # Skip height scanner for plane terrain since RayCaster requires a mesh, not a simple plane
+        if terrain_state.mesh_type not in ["fake", None, "plane"]:
             # Add a height scanner to the torso to detect the height of the terrain mesh
             # TODO: Scene USD files need ground mapping
             height_scanner_config = RayCasterCfg(

@@ -15,7 +15,7 @@ init_pose_config = NoiseToInitialPoseConfig(
 )
 
 motion_config = MotionConfig(
-    motion_file="holosoma/data/motions/g1_29dof/whole_body_tracking/sub3_largebox_003_mj.npz",
+    motion_file="/home/wasabi/g1-motion-control/my work space/fight1_subject3_robot_motion.npz",
     body_names_to_track=[
         "pelvis",
         "left_hip_roll_link",

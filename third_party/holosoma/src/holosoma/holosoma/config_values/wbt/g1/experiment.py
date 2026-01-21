@@ -19,7 +19,7 @@ g1_29dof_wbt = ExperimentConfig(
     training=TrainingConfig(
         project="WholeBodyTracking",
         name="g1_29dof_wbt_manager",
-        num_envs=8192,
+        num_envs=9400,
     ),
     env_class="holosoma.envs.wbt.wbt_manager.WholeBodyTrackingManager",
     algo=replace(

@@ -145,3 +145,129 @@ Avoid duplicating large STL/Meshes across different `third_party` folders.
 ### 4. Weights & Model Management
 - **Git LFS**: Large `.pt` and `.onnx` files should be tracked via Git LFS or kept outside the main git history if they are intermediate training results.
 - **Redundancy Cleanup**: Intermediate models are periodically pruned (keeping only start and final milestones) to save space.
+
+---
+
+## 🎬 Motion Data Processing for Whole Body Tracking
+
+### 1. Convert BVH to LAFAN Format
+
+Convert BVH files to `.npy` format for retargeting:
+
+```bash
+cd third_party/holosoma/src/holosoma_retargeting
+source ../../scripts/source_retargeting_setup.sh
+cd data_utils
+python extract_global_positions.py \
+    --input_dir <bvh_directory> \
+    --output_dir <output_directory>
+```
+
+### 2. Run Retargeting
+
+Convert human motion to robot motion:
+
+```bash
+cd third_party/holosoma/src/holosoma_retargeting
+source ../../scripts/source_retargeting_setup.sh
+python examples/robot_retarget.py \
+    --data_path <npy_directory> \
+    --task-type robot_only \
+    --task-name <sequence_name> \
+    --data_format lafan \
+    --task-config.ground-range -10 10 \
+    --save_dir demo_results/g1/robot_only/<output_dir> \
+    --retargeter.foot-sticking-tolerance 0.02
+```
+
+### 3. Convert to Training Format
+
+Convert retargeted `.npz` to training format:
+
+```bash
+cd third_party/holosoma/src/holosoma_retargeting
+source ../../scripts/source_retargeting_setup.sh
+python data_conversion/convert_data_format_mj.py \
+    --input_file <retargeted_file>.npz \
+    --output_fps 50 \
+    --output_name <output_file>.npz \
+    --data_format lafan \
+    --object_name "ground" \
+    --once
+```
+
+### 4. Trim Motion File
+
+Extract specific frame range from motion file. **Note**: Edit the script to set input/output paths and frame range:
+
+```bash
+cd third_party/holosoma/src/holosoma_retargeting
+source ../../scripts/source_retargeting_setup.sh
+# Edit trim_npz.py to set input_file, output_file, start_frame, end_frame
+python trim_npz.py
+```
+
+Example script configuration:
+```python
+input_file = "converted_res/robot_only/motion.npz"
+output_file = "converted_res/robot_only/motion_trimmed.npz"
+start_frame = 10700
+end_frame = 11700
+```
+
+### 5. Add Initial Pose Interpolation
+
+Prepend interpolated frames from reference initial pose to motion start. **Note**: Edit the script to set file paths and interpolation duration:
+
+```bash
+python prepend_interpolation.py
+```
+
+Script configuration:
+```python
+reference_file = "converted_res/robot_only/original_motion.npz"  # Extract frame 0 as reference
+input_file = "converted_res/robot_only/motion_trimmed.npz"  # Motion to prepend
+output_file = "converted_res/robot_only/motion_with_interp.npz"
+num_interp_frames = 13  # 0.25s at 50fps
+reference_frame_idx = 0  # Use frame 0 from reference file
+```
+
+This script:
+- Extracts initial pose from reference motion file (frame 0)
+- Interpolates from reference pose to motion start
+- Preserves target frame x,y position to avoid horizontal drift
+- Only interpolates z position, orientation, and joint angles
+
+### 6. Visualize Motion File
+
+View motion sequence in browser:
+
+```bash
+cd third_party/holosoma/src/holosoma_retargeting
+source ../../scripts/source_retargeting_setup.sh
+python data_conversion/viser_body_vel_player.py \
+    --npz_path <motion_file>.npz \
+    --robot_urdf models/g1/g1_29dof.urdf
+```
+
+Open the displayed URL (usually `http://localhost:8080`) to:
+- Playback motion sequence
+- Control playback with slider
+- View body positions and velocity vectors
+- Toggle mesh and velocity arrow display
+
+### 7. Train Whole Body Tracking
+
+```bash
+cd third_party/holosoma
+source scripts/source_isaacsim_setup.sh
+python src/holosoma/holosoma/train_agent.py \
+    exp:g1-29dof-wbt \
+    logger:wandb \
+    --command.setup_terms.motion_command.params.motion_config.motion_file=<absolute_or_relative_path_to_motion_file>.npz
+```
+
+**Note**: 
+- Use absolute path or path relative to project root for `motion_file`
+- Training uses `enable_default_pose_prepend=True` by default, which adds 2s interpolation from config default pose to motion start
+- If motion file already has initial pose interpolation, this provides smooth double transition

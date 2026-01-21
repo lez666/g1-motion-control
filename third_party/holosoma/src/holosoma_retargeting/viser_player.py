@@ -10,6 +10,31 @@ import numpy as np
 import tyro
 import viser  # type: ignore[import-not-found]  # pip install viser
 import yourdfpy  # type: ignore[import-untyped]  # pip install yourdfpy
+
+# Monkey patch yourdfpy to fix the numpy scalar error
+import yourdfpy.urdf
+
+_original_fk_joint = yourdfpy.urdf.URDF._forward_kinematics_joint
+def _patched_fk_joint(self, joint, q=None):
+    try:
+        return _original_fk_joint(self, joint, q)
+    except TypeError as e:
+        if "only 0-dimensional arrays can be converted to Python scalars" in str(e):
+            if q is None:
+                # Re-calculate q from internal state but force scalar
+                q_val = self.cfg[
+                    self.actuated_dof_indices[
+                        self.actuated_joint_names.index(joint.name)
+                    ]
+                ]
+                q = float(np.asarray(q_val).item())
+            else:
+                q = float(np.asarray(q).item())
+            return _original_fk_joint(self, joint, q)
+        raise e
+
+yourdfpy.urdf.URDF._forward_kinematics_joint = _patched_fk_joint
+
 from viser.extras import ViserUrdf  # type: ignore[import-not-found]
 
 src_root = Path(__file__).resolve().parent.parent

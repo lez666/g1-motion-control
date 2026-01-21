@@ -167,8 +167,51 @@ SMPLX_DEMO_JOINTS = [
     "R_Wrist",
 ]
 
+CUSTOM_BVH_JOINTS = [
+    "Hips",
+    "RightUpLeg",
+    "RightLeg",
+    "RightFoot",
+    "RightToe",
+    "LeftUpLeg",
+    "LeftLeg",
+    "LeftFoot",
+    "LeftToe",
+    "Spine",
+    "Chest2",
+    "Chest3",
+    "Chest4",
+    "Neck",
+    "Head",
+    "RightCollar",
+    "RightShoulder",
+    "RightElbow",
+    "RightWrist",
+    "LeftCollar",
+    "LeftShoulder",
+    "LeftElbow",
+    "LeftWrist",
+]
+
 # Joint mappings - organized by (data_format, robot_type)
 JOINTS_MAPPINGS = {
+    ("custom_bvh", "g1"): {
+        "Hips": "pelvis_contour_link",
+        "LeftUpLeg": "left_hip_pitch_link",
+        "RightUpLeg": "right_hip_pitch_link",
+        "LeftLeg": "left_knee_link",
+        "RightLeg": "right_knee_link",
+        "LeftShoulder": "left_shoulder_roll_link",
+        "RightShoulder": "right_shoulder_roll_link",
+        "LeftElbow": "left_elbow_link",
+        "RightElbow": "right_elbow_link",
+        "LeftFoot": "left_ankle_intermediate_1_link",
+        "RightFoot": "right_ankle_intermediate_1_link",
+        "LeftToe": "left_ankle_roll_sphere_5_link",
+        "RightToe": "right_ankle_roll_sphere_5_link",
+        "LeftWrist": "left_rubber_hand_link",
+        "RightWrist": "right_rubber_hand_link",
+    },
     ("lafan", "g1"): {
         "Spine1": "pelvis_contour_link",
         "LeftUpLeg": "left_hip_pitch_link",
@@ -292,6 +335,7 @@ JOINTS_MAPPINGS = {
 
 # Data format specific constants
 TOE_NAMES_BY_FORMAT = {
+    "custom_bvh": ["LeftToe", "RightToe"],
     "lafan": ["LeftToeBase", "RightToeBase"],
     "smplh": ["L_Toe", "R_Toe"],
     "mocap": ["LeftToeBase", "RightToeBase"],
@@ -318,6 +362,7 @@ DATA_FORMAT_CONSTANTS: dict[str, FormatConstants] = {
 # This is the SINGLE PLACE to add new formats - just add an entry here!
 # No need to update any Literal types - DataFormat is now str with runtime validation
 DEMO_JOINTS_REGISTRY: dict[str, list[str]] = {
+    "custom_bvh": CUSTOM_BVH_JOINTS,
     "lafan": LAFAN_DEMO_JOINTS,
     "smplh": SMPLH_DEMO_JOINTS,
     "mocap": MOCAP_DEMO_JOINTS,

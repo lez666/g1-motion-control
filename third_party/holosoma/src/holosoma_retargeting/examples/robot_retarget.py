@@ -215,6 +215,16 @@ def load_motion_data(
             # LAFAN-specific spine adjustment
             human_joints[:, spine_joint_idx, -1] -= 0.06
             smpl_scale = motion_data_config.default_scale_factor or 1.0
+        elif data_format == "custom_bvh":
+            npy_path = data_path / f"{task_name}.npy"
+            if not npy_path.exists():
+                raise FileNotFoundError(f"Custom BVH data file not found: {npy_path}")
+
+            human_joints = np.load(str(npy_path))
+            # If the script already handled Y-up to Z-up, we might not need this.
+            # My script uses standard BVH coordinates. Let's assume we need Z-up.
+            human_joints = transform_y_up_to_z_up(human_joints)
+            smpl_scale = motion_data_config.default_scale_factor or 1.0
         elif data_format == "smplh":  # smplh
             pt_path = data_path / f"{task_name}.pt"
             if not pt_path.exists():
@@ -394,8 +404,10 @@ def _compute_q_init_base(
         q_init_base in MuJoCo order: [0:3] position, [3:7] quaternion, [7:] joints
     """
     if task_type == "robot_only":
-        if data_format == "lafan":
-            spine_joint_idx = constants.DEMO_JOINTS.index("Spine1")
+        if data_format in ("lafan", "custom_bvh"):
+            # Use Hips (custom_bvh) or Spine1 (lafan)
+            root_name = "Hips" if data_format == "custom_bvh" else "Spine1"
+            spine_joint_idx = constants.DEMO_JOINTS.index(root_name)
             human_quat_init = estimate_human_orientation(human_joints, constants.DEMO_JOINTS)
             # MuJoCo order: pos first, then quat
             q_init_base = np.concatenate(
