@@ -215,9 +215,31 @@ start_frame = 10700
 end_frame = 11700
 ```
 
-### 5. Add Initial Pose Interpolation
+### 5. Convert PKL to NPZ Format
 
-Prepend interpolated frames from reference initial pose to motion start. **Note**: Edit the script to set file paths and interpolation duration:
+Convert `.pkl` motion files to training `.npz` format:
+
+```bash
+cd third_party/holosoma/src/holosoma_retargeting
+source ../../scripts/source_retargeting_setup.sh
+python convert_pkl_to_npz.py \
+    --pkl_path <input_file>.pkl \
+    --output_path <output_file>.npz \
+    --xml_path models/g1/g1_29dof.xml \
+    --fps <fps>  # Optional: override fps if not in pkl
+```
+
+This script:
+- Loads `.pkl` file with `root_pos`, `root_rot`, `dof_pos` fields
+- Uses MuJoCo forward kinematics to compute body positions
+- Converts to standard `.npz` format with all required fields
+- Computes velocities via numerical differentiation
+
+### 6. Add Initial Pose Interpolation
+
+#### 6.1. Prepend Interpolation (Start Only)
+
+Add interpolated frames from reference initial pose to motion start. **Note**: Edit the script to set file paths and interpolation duration:
 
 ```bash
 python prepend_interpolation.py
@@ -238,7 +260,29 @@ This script:
 - Preserves target frame x,y position to avoid horizontal drift
 - Only interpolates z position, orientation, and joint angles
 
-### 6. Visualize Motion File
+#### 6.2. Add Interpolation to Both Ends
+
+Add interpolated frames at both start and end of motion. **Note**: Edit the script to set file paths:
+
+```bash
+python add_interpolation_both_ends.py
+```
+
+Script configuration:
+```python
+default_pose_file = "converted_res/robot_only/default_pose.npz"  # Default pose (single frame)
+input_file = "converted_res/robot_only/motion_trimmed.npz"
+output_file = "converted_res/robot_only/motion_with_interp.npz"
+num_interp_frames = 13  # 0.25s at 50fps (auto-calculated from fps)
+```
+
+This script:
+- Adds interpolation from default pose to motion start
+- Adds interpolation from motion end to default pose
+- Preserves x,y position to avoid horizontal drift
+- Only interpolates z position, orientation, and joint angles
+
+### 7. Visualize Motion File
 
 View motion sequence in browser:
 
@@ -256,7 +300,7 @@ Open the displayed URL (usually `http://localhost:8080`) to:
 - View body positions and velocity vectors
 - Toggle mesh and velocity arrow display
 
-### 7. Train Whole Body Tracking
+### 8. Train Whole Body Tracking
 
 ```bash
 cd third_party/holosoma
