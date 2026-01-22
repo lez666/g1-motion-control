@@ -242,21 +242,24 @@ def add_interpolation_both_ends(default_pose_file, input_file, output_file, num_
     print(f"  总时长: {new_frames/fps:.2f}秒")
 
 if __name__ == "__main__":
-    # 从virtualDance.npz创建default pose，然后添加插值
-    default_pose_file = "converted_res/robot_only/default_pose_virtualDance.npz"
-    input_file = "converted_res/robot_only/virtualDance_trimmed_9300_10700.npz"
-    output_file = "converted_res/robot_only/virtualDance_trimmed_9300_10700_with_interp.npz"
+    import argparse
+    parser = argparse.ArgumentParser(description="在motion文件的开头和结尾都添加default pose插值")
+    parser.add_argument("--input_file", type=str, required=True, help="输入的npz文件路径")
+    parser.add_argument("--output_file", type=str, required=True, help="输出的npz文件路径")
+    parser.add_argument("--default_pose_file", type=str, required=True, help="default pose的npz文件路径")
+    parser.add_argument("--interp_duration", type=float, default=0.25, help="插值时长（秒，默认0.25）")
     
-    # 根据fps计算0.25秒需要的帧数
-    import numpy as np
-    input_data = np.load(input_file, allow_pickle=True)
+    args = parser.parse_args()
+    
+    # 根据fps计算插值需要的帧数
+    input_data = np.load(args.input_file, allow_pickle=True)
     fps = float(np.array(input_data["fps"]).reshape(-1)[0])
-    num_frames = int(fps * 0.25)
-    print(f"FPS: {fps}, 0.25秒 = {num_frames}帧")
+    num_frames = int(fps * args.interp_duration)
+    print(f"FPS: {fps}, {args.interp_duration}秒 = {num_frames}帧")
     
     add_interpolation_both_ends(
-        default_pose_file=default_pose_file,
-        input_file=input_file,
-        output_file=output_file,
+        default_pose_file=args.default_pose_file,
+        input_file=args.input_file,
+        output_file=args.output_file,
         num_interp_frames=num_frames
     )

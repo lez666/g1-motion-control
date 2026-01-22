@@ -15,7 +15,7 @@ init_pose_config = NoiseToInitialPoseConfig(
 )
 
 motion_config = MotionConfig(
-    motion_file="/home/wasabi/g1-motion-control/my work space/fight1_subject3_robot_motion.npz",
+    motion_file="/home/wasabi/g1-motion-control/my work space/virtualDance_wbt_2000_4300_fixed.npz",
     body_names_to_track=[
         "pelvis",
         "left_hip_roll_link",
@@ -35,6 +35,10 @@ motion_config = MotionConfig(
     body_name_ref=["torso_link"],
     use_adaptive_timesteps_sampler=False,
     noise_to_initial_pose=init_pose_config,
+    enable_default_pose_prepend=True,  # 参照demo，启用default pose插值
+    enable_default_pose_append=True,  # 参照demo，启用default pose插值
+    default_pose_prepend_duration_s=2.0,  # 参照demo标准
+    default_pose_append_duration_s=2.0,  # 参照demo标准
 )
 
 motion_config_w_object = replace(

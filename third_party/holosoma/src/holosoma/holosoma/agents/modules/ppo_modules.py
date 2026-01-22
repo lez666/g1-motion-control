@@ -71,20 +71,47 @@ class PPOActor(nn.Module):
         return self.distribution.entropy().sum(dim=-1)
 
     def update_distribution(self, actor_obs):
+        # 清理观察值中的NaN/Inf
+        actor_obs = torch.nan_to_num(actor_obs, nan=0.0, posinf=0.0, neginf=0.0)
+        
         mean = self.actor(actor_obs)
+        # 清理mean中的NaN/Inf
+        mean = torch.nan_to_num(mean, nan=0.0, posinf=0.0, neginf=0.0)
+        
+        # 清理self.std中的NaN/Inf，并确保为正（使用detach避免影响梯度）
+        with torch.no_grad():
+            std_detached = self.std.detach()
+            if torch.isnan(std_detached).any() or torch.isinf(std_detached).any() or (std_detached < 0).any():
+                self.std.data = torch.clamp(torch.nan_to_num(std_detached, nan=1.0, posinf=1.0, neginf=1.0), min=0.01)
+        
+        # 计算clamped_std
         if self.min_noise_std:
             clamped_std = torch.clamp(self.std, min=self.min_noise_std)
-            self.distribution = Normal(mean, mean * 0.0 + clamped_std)
         elif self.min_mean_noise_std:
-            current_mean = self.std.mean()
-            if current_mean < self.min_mean_noise_std:
-                scale_up = self.min_mean_noise_std / (current_mean + 1e-6)
-                clamped_std = self.std * scale_up
-            else:
-                clamped_std = self.std
-            self.distribution = Normal(mean, mean * 0.0 + clamped_std)
+            # 使用detach检查，避免影响梯度
+            with torch.no_grad():
+                current_mean_detached = self.std.mean().detach()
+                if current_mean_detached < self.min_mean_noise_std or torch.isnan(current_mean_detached) or torch.isinf(current_mean_detached):
+                    # 使用torch.abs而不是.abs()方法
+                    current_mean_abs = torch.abs(current_mean_detached)
+                    scale_up = self.min_mean_noise_std / (current_mean_abs + 1e-6)
+                    clamped_std = self.std * scale_up
+                else:
+                    clamped_std = self.std
+            clamped_std = torch.clamp(clamped_std, min=0.01)  # 额外保护
         else:
-            self.distribution = Normal(mean, mean * 0.0 + self.std)
+            # 即使没有设置min_noise_std，也添加最小保护
+            clamped_std = torch.clamp(self.std, min=0.01)
+        
+        # 最终确保clamped_std有效（使用detach避免影响梯度）
+        with torch.no_grad():
+            clamped_std_detached = clamped_std.detach()
+            if torch.isnan(clamped_std_detached).any() or torch.isinf(clamped_std_detached).any() or (clamped_std_detached < 0).any():
+                clamped_std = torch.ones_like(self.std) * 0.01
+            else:
+                clamped_std = torch.clamp(clamped_std, min=0.01)
+        
+        self.distribution = Normal(mean, mean * 0.0 + clamped_std)
 
     def act(self, policy_state_dict):
         self.update_distribution(policy_state_dict["actor_obs"])

@@ -75,10 +75,13 @@ def trim_npz(input_file, output_file, start_frame=0, end_frame=None):
         print(f"✓ 剪切完成！原始 {total_frames} 帧 -> 剪切后 {trimmed_data['joint_pos'].shape[0]} 帧")
 
 if __name__ == "__main__":
-    # 直接使用用户指定的参数
-    input_file = "converted_res/robot_only/fight1_subject2_mj_fps50.npz"
-    output_file = "converted_res/robot_only/fight1_subject2_trimmed_10700_11700.npz"
-    start_frame = 10700
-    end_frame = 11700
+    import argparse
+    parser = argparse.ArgumentParser(description="剪切 npz 动作文件")
+    parser.add_argument("--input_file", type=str, required=True, help="输入的 npz 文件路径")
+    parser.add_argument("--output_file", type=str, required=True, help="输出的 npz 文件路径")
+    parser.add_argument("--start_frame", type=int, required=True, help="起始帧（包含），从 0 开始")
+    parser.add_argument("--end_frame", type=int, required=True, help="结束帧（不包含）")
     
-    trim_npz(input_file, output_file, start_frame, end_frame)
+    args = parser.parse_args()
+    
+    trim_npz(args.input_file, args.output_file, args.start_frame, args.end_frame)

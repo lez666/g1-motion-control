@@ -119,6 +119,7 @@ class MotionLoader:
         line_range: tuple[int, int] | None,
         has_dynamic_object: bool,
         use_omniretarget_data: bool,
+        velocity_scale: float = 1.0,
     ):
         self.motion_file = motion_file
         self.input_fps = input_fps
@@ -130,6 +131,7 @@ class MotionLoader:
         self.line_range = line_range
         self.has_dynamic_object = has_dynamic_object
         self.use_omniretarget_data = use_omniretarget_data
+        self.velocity_scale = velocity_scale
         self._load_motion()
         self._interpolate_motion()
         self._compute_velocities()
@@ -246,14 +248,18 @@ class MotionLoader:
         return index_0, index_1, blend
 
     def _compute_velocities(self):
-        """Computes the velocities of the motion."""
-        self.motion_base_lin_vels = torch.gradient(self.motion_base_poss, spacing=self.output_dt, dim=0)[0]
-        self.motion_dof_vels = torch.gradient(self.motion_dof_poss, spacing=self.output_dt, dim=0)[0]
-        self.motion_base_ang_vels = self._so3_derivative(self.motion_base_rots, self.output_dt)
+        """Computes the velocities of the motion.
+        
+        Note: Velocities are scaled by velocity_scale to match the scale factor used for positions.
+        For LAFAN data, this should be the same scale factor (e.g., 1.27/1.7 ≈ 0.747).
+        """
+        self.motion_base_lin_vels = torch.gradient(self.motion_base_poss, spacing=self.output_dt, dim=0)[0] * self.velocity_scale
+        self.motion_dof_vels = torch.gradient(self.motion_dof_poss, spacing=self.output_dt, dim=0)[0] * self.velocity_scale
+        self.motion_base_ang_vels = self._so3_derivative(self.motion_base_rots, self.output_dt) * self.velocity_scale
 
         if self.has_dynamic_object:
-            self.motion_object_lin_vels = torch.gradient(self.motion_object_poss, spacing=self.output_dt, dim=0)[0]
-            self.motion_object_ang_vels = self._so3_derivative(self.motion_object_rots, self.output_dt)
+            self.motion_object_lin_vels = torch.gradient(self.motion_object_poss, spacing=self.output_dt, dim=0)[0] * self.velocity_scale
+            self.motion_object_ang_vels = self._so3_derivative(self.motion_object_rots, self.output_dt) * self.velocity_scale
 
     def _so3_derivative(self, rotations: torch.Tensor, dt: float) -> torch.Tensor:
         """Computes the derivative of a sequence of SO3 rotations.
@@ -349,15 +355,6 @@ def run_simulator(joint_names: list[str]):
     has_dynamic_object = args_cli.has_dynamic_object
     use_omniretarget_data = args_cli.use_omniretarget_data
     line_range: tuple[int, int] | None = args_cli.line_range
-    motion = MotionLoader(
-        motion_file=args_cli.input_file,
-        input_fps=args_cli.input_fps,
-        output_fps=args_cli.output_fps,
-        device=device,
-        line_range=line_range,
-        has_dynamic_object=has_dynamic_object,
-        use_omniretarget_data=use_omniretarget_data,
-    )
 
     object_name = args_cli.object_name
     if object_name is None:
@@ -372,6 +369,29 @@ def run_simulator(joint_names: list[str]):
         robot_config,
         motion_config,
         object_name=object_name,
+    )
+    
+    # Get velocity scale factor based on data format
+    # For LAFAN data, use the default scale factor (1.27/1.7 ≈ 0.747)
+    # This ensures velocities match the scale used for positions during retargeting
+    velocity_scale = motion_config.default_scale_factor if motion_config.default_scale_factor is not None else 1.0
+    if args_cli.data_format == "lafan" and velocity_scale == 1.0:
+        # Fallback: use LAFAN default if not set
+        from holosoma_retargeting.config_types.data_type import DATA_FORMAT_CONSTANTS
+        lafan_constants = DATA_FORMAT_CONSTANTS.get("lafan", {})
+        velocity_scale = lafan_constants.get("default_scale_factor", 1.27 / 1.7)
+    
+    print(f"Using velocity scale factor: {velocity_scale:.6f} for data format: {args_cli.data_format}")
+    
+    motion = MotionLoader(
+        motion_file=args_cli.input_file,
+        input_fps=args_cli.input_fps,
+        output_fps=args_cli.output_fps,
+        device=device,
+        line_range=line_range,
+        has_dynamic_object=has_dynamic_object,
+        use_omniretarget_data=use_omniretarget_data,
+        velocity_scale=velocity_scale,
     )
 
     # Load Mujoco model
