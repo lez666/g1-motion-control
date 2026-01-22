@@ -34,13 +34,7 @@ g1_29dof_wbt = ExperimentConfig(
             use_symmetry=False,
             actor_optimizer=replace(algo.ppo.config.actor_optimizer, weight_decay=0.000),
             critic_optimizer=replace(algo.ppo.config.critic_optimizer, weight_decay=0.000),
-            module_dict=replace(
-                algo.ppo.config.module_dict,
-                actor=replace(
-                    algo.ppo.config.module_dict.actor,
-                    min_noise_std=0.01,  # 防止std变成负值
-                ),
-            ),
+            module_dict=algo.ppo.config.module_dict,
         ),
     ),
     simulator=replace(
