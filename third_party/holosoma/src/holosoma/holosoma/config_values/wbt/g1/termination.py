@@ -15,10 +15,9 @@ g1_29dof_wbt_termination = TerminationManagerCfg(
             func="holosoma.managers.termination.terms.wbt:BadTracking",
             params={
                 # robot tracking
-                # 大幅放宽阈值以允许更长的episode（解决episode过短问题）
-                "bad_ref_pos_threshold": 1.5,  # 原值0.5，调整为3倍（从0.75增加到1.5）
-                "bad_ref_ori_threshold": 2.5,  # 原值0.8，调整为3.1倍（从1.2增加到2.5，因为error_ref_rot约0.53）
-                "bad_motion_body_pos_threshold": 0.75,  # 原值0.25，调整为3倍（从0.375增加到0.75）
+                "bad_ref_pos_threshold": 0.5,
+                "bad_ref_ori_threshold": 0.8,
+                "bad_motion_body_pos_threshold": 0.25,
                 # NOTE: body_names_to_track is shared with command_manager
                 "body_names_to_track": [
                     "pelvis",
